@@ -4,7 +4,7 @@
 
 (defprotocol single_token_simple basic
 	(defrole client
-		(vars (c as rs name) (access acess_token value rights response data) (n1 n2 n3 text) (k akey))
+		(vars (c as rs name) (access acess_token value rights response data) (n1 n2 text) (k akey))
 		(trace
 			; (Section 12.16 p.123) Since TLS protects the entire HTTP message in transit, verification of the TLS client certificate
 			; presented with the message provides a sufficient binding between the two.			
@@ -35,7 +35,7 @@
 		)
 	)
 	(defrole resource_server
-		(vars (c rs name) (acess_token value rights response data) (n2 n3 text) (k akey))
+		(vars (c rs name) (acess_token value rights response data) (n2 text) (k akey))
 		(trace
 			(recv (enc (enc n2 (enc (cat acess_token value rights) (invk k)) (pubk c)) (ltk c rs))) ; RS decrypts and validates the client's token
 			(send (enc (enc response (pubk c)) (ltk c rs)))
