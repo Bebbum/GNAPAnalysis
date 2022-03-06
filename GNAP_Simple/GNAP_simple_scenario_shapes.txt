@@ -1,7 +1,7 @@
 (comment "CPSA 3.6.9")
 (comment "Extracted shapes")
 
-(herald "Grant Negotiation and Authorization Protocol" (limit 200)
+(herald "Grant Negotiation and Authorization Protocol" (limit 300)
   (comment
     "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
@@ -9,7 +9,7 @@
 
 (comment "All input read from GNAP_simple_scenario.scm")
 
-(comment "Step count limited to 200")
+(comment "Step count limited to 300")
 
 (defprotocol single_token_simple basic
   (defrole client
@@ -17,22 +17,26 @@
       (access acess_token value access_type response data))
     (trace (send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c)))))
   (defrole authorization_server
     (vars (c as rs name) (access acess_token value access_type data))
     (trace (recv (enc c access (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))))
   (defrole resource_server
     (vars (c as rs name) (acess_token value access_type response data))
     (trace
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (send (enc response (ltk rs c))))))
 
 (defskeleton single_token_simple
@@ -46,10 +50,12 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c)))))
   (label 0)
   (unrealized (0 1) (0 3))
@@ -57,39 +63,54 @@
   (comment "2 in cohort - 2 not yet seen"))
 
 (defskeleton single_token_simple
-  (vars (access acess_token value access_type response access-0 data)
-    (c as name))
+  (vars
+    (access acess_token value access_type response access-0 access-1
+      data) (c as c-0 rs name))
   (defstrand client 4 (access access) (acess_token acess_token)
     (value value) (access_type access_type) (response response) (c c)
     (as as) (rs c))
   (defstrand client 3 (access access-0) (acess_token acess_token)
     (value value) (access_type access_type) (c as) (as as) (rs c))
+  (defstrand authorization_server 2 (access access-1)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c c-0) (as as) (rs rs))
   (defstrand resource_server 2 (acess_token acess_token) (value value)
     (access_type access_type) (response response) (c c) (as as) (rs c))
-  (precedes ((0 2) (2 0)) ((1 2) (0 1)) ((2 1) (0 3)))
+  (precedes ((0 2) (3 0)) ((1 2) (0 1)) ((2 1) (1 1)) ((3 1) (0 3)))
   (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
-  (operation encryption-test (displaced 3 0 client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk c))
-      (ltk c c)) (2 0))
+  (operation encryption-test (displaced 4 0 client 3)
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk c)) (ltk c c)) (3 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk c c))) (recv (enc response (ltk c c))))
     ((send (enc as access-0 (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as c))))
+    ((recv (enc c-0 access-1 (ltk c-0 as)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
+          (ltk as c-0))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk c))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk c))
          (ltk c c))) (send (enc response (ltk c c)))))
-  (label 6)
+  (label 9)
   (parent 0)
   (unrealized)
   (shape)
@@ -101,105 +122,66 @@
 
 (defskeleton single_token_simple
   (vars
-    (access acess_token value access_type response access-0
-      acess_token-0 value-0 access_type-0 access-1 data)
-    (c as as-0 name))
+    (access acess_token value access_type response access-0 access-1
+      acess_token-0 value-0 access_type-0 access-2 data)
+    (c as c-0 rs as-0 name))
   (defstrand client 4 (access access) (acess_token acess_token)
     (value value) (access_type access_type) (response response) (c c)
     (as as) (rs c))
   (defstrand client 3 (access access-0) (acess_token acess_token)
     (value value) (access_type access_type) (c as) (as as) (rs c))
+  (defstrand authorization_server 2 (access access-1)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c c-0) (as as) (rs rs))
   (defstrand resource_server 2 (acess_token acess_token-0)
     (value value-0) (access_type access_type-0) (response response)
     (c c) (as as-0) (rs c))
-  (defstrand client 3 (access access-1) (acess_token acess_token-0)
+  (defstrand client 3 (access access-2) (acess_token acess_token-0)
     (value value-0) (access_type access_type-0) (c c) (as as-0) (rs c))
-  (precedes ((1 2) (0 1)) ((2 1) (0 3)) ((3 2) (2 0)))
+  (precedes ((1 2) (0 1)) ((2 1) (1 1)) ((3 1) (0 3)) ((4 2) (3 0)))
   (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
   (operation encryption-test (added-strand client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk c))
-      (ltk c c)) (2 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk c)) (ltk c c)) (3 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk c c))) (recv (enc response (ltk c c))))
     ((send (enc as access-0 (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
           (ltk as c))))
+    ((recv (enc c-0 access-1 (ltk c-0 as)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
+          (ltk as c-0))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk c))
-         (ltk c c))) (send (enc response (ltk c c))))
-    ((send (enc c access-1 (ltk c as-0)))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+           (pubk c)) (ltk c c))) (send (enc response (ltk c c))))
+    ((send (enc c access-2 (ltk c as-0)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk c))
-          (ltk as-0 c)))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+            (pubk c)) (ltk as-0 c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk c))
-          (ltk c c)))))
-  (label 8)
-  (parent 0)
-  (unrealized)
-  (shape)
-  (maps
-    ((0)
-      ((c c) (as as) (rs c) (access access) (acess_token acess_token)
-        (value value) (access_type access_type) (response response))))
-  (origs))
-
-(defskeleton single_token_simple
-  (vars
-    (access acess_token value access_type response access-0
-      acess_token-0 value-0 access_type-0 access-1 data) (c as name))
-  (defstrand client 4 (access access) (acess_token acess_token)
-    (value value) (access_type access_type) (response response) (c c)
-    (as as) (rs c))
-  (defstrand client 3 (access access-0) (acess_token acess_token)
-    (value value) (access_type access_type) (c as) (as as) (rs c))
-  (defstrand resource_server 2 (acess_token acess_token-0)
-    (value value-0) (access_type access_type-0) (response response)
-    (c c) (as c) (rs c))
-  (defstrand authorization_server 2 (access access-1)
-    (acess_token acess_token-0) (value value-0)
-    (access_type access_type-0) (c c) (as c) (rs c))
-  (defstrand client 1 (access access-1) (c c) (as c))
-  (precedes ((1 2) (0 1)) ((2 1) (0 3)) ((3 1) (2 0)) ((4 0) (3 0)))
-  (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
-  (operation encryption-test (added-strand client 1)
-    (enc c access-1 (ltk c c)) (3 0))
-  (traces
-    ((send (enc c access (ltk c as)))
-      (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk as c)))
-      (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk c c))) (recv (enc response (ltk c c))))
-    ((send (enc as access-0 (ltk as as)))
-      (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk as as)))
-      (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk as c))))
-    ((recv
-       (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk c))
-         (ltk c c))) (send (enc response (ltk c c))))
-    ((recv (enc c access-1 (ltk c c)))
-      (send
-        (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk c))
-          (ltk c c)))) ((send (enc c access-1 (ltk c c)))))
-  (label 15)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+            (pubk c)) (ltk c c)))))
+  (label 11)
   (parent 0)
   (unrealized)
   (shape)
@@ -224,24 +206,29 @@
   (non-orig (ltk c as) (ltk c rs) (ltk as c) (ltk rs c) (privk c)
     (privk as) (privk rs))
   (operation encryption-test (displaced 3 0 client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-      (ltk c rs)) (2 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk rs)) (ltk c rs)) (2 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk rs))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk rs))
          (ltk c rs))) (send (enc response (ltk rs c)))))
-  (label 16)
+  (label 14)
   (parent 0)
   (unrealized)
   (shape)
@@ -270,34 +257,38 @@
   (non-orig (ltk c as) (ltk c rs) (ltk as c) (ltk rs c) (privk c)
     (privk as) (privk rs))
   (operation encryption-test (added-strand client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-      (ltk c rs)) (2 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk rs)) (ltk c rs)) (2 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-0 (ltk c as-0)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
             (pubk rs)) (ltk as-0 c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
             (pubk rs)) (ltk c rs)))))
-  (label 17)
+  (label 15)
   (parent 0)
   (unrealized)
   (shape)
@@ -321,24 +312,29 @@
   (precedes ((0 0) (1 0)) ((1 1) (0 1)) ((1 1) (2 0)) ((2 1) (0 3)))
   (non-orig (ltk as as) (privk as))
   (operation encryption-test (displaced 3 1 authorization_server 2)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-      (ltk c rs)) (2 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+        (pubk rs)) (ltk c rs)) (2 0))
   (traces
     ((send (enc as access (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))) (recv (enc response (ltk as as))))
     ((recv (enc as access (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk as))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk as))
          (ltk as as))) (send (enc response (ltk as as)))))
-  (label 18)
+  (label 16)
   (parent 0)
   (unrealized)
   (shape)
@@ -364,24 +360,29 @@
   (non-orig (ltk c as) (ltk c rs) (ltk as c) (ltk rs c) (privk c)
     (privk as) (privk rs))
   (operation encryption-test (displaced 4 0 client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-      (ltk c rs)) (3 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk rs)) (ltk c rs)) (3 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))) ((send (enc c access-0 (ltk c as))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk rs))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk rs))
          (ltk c rs))) (send (enc response (ltk rs c)))))
-  (label 20)
+  (label 18)
   (parent 0)
   (unrealized)
   (shape)
@@ -412,34 +413,38 @@
   (non-orig (ltk c as) (ltk c rs) (ltk as c) (ltk rs c) (privk c)
     (privk as) (privk rs))
   (operation encryption-test (added-strand client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-      (ltk c rs)) (3 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+        (pubk rs)) (ltk c rs)) (3 0))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))) ((send (enc c access-0 (ltk c as))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as-0) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-1 (ltk c as-0)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
             (pubk rs)) (ltk as-0 c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as-0)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as-0))
             (pubk rs)) (ltk c rs)))))
-  (label 22)
+  (label 20)
   (parent 0)
   (unrealized)
   (shape)
@@ -465,30 +470,103 @@
   (precedes ((1 1) (0 1)) ((1 1) (3 0)) ((2 0) (1 0)) ((3 1) (0 3)))
   (non-orig (ltk as as) (privk as))
   (operation encryption-test (displaced 4 1 authorization_server 2)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-      (ltk c rs)) (3 0))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+        (pubk rs)) (ltk c rs)) (3 0))
   (traces
     ((send (enc as access (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))) (recv (enc response (ltk as as))))
     ((recv (enc as access-0 (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))) ((send (enc as access-0 (ltk as as))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk as))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk as))
          (ltk as as))) (send (enc response (ltk as as)))))
-  (label 23)
+  (label 21)
   (parent 0)
   (unrealized)
   (shape)
   (maps
     ((0)
       ((c as) (as as) (rs as) (access access) (acess_token acess_token)
+        (value value) (access_type access_type) (response response))))
+  (origs))
+
+(defskeleton single_token_simple
+  (vars
+    (access acess_token value access_type response access-0 access-1
+      acess_token-0 value-0 access_type-0 access-2 data)
+    (c as c-0 rs name))
+  (defstrand client 4 (access access) (acess_token acess_token)
+    (value value) (access_type access_type) (response response) (c c)
+    (as as) (rs c))
+  (defstrand client 3 (access access-0) (acess_token acess_token)
+    (value value) (access_type access_type) (c as) (as as) (rs c))
+  (defstrand authorization_server 2 (access access-1)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c c-0) (as as) (rs rs))
+  (defstrand resource_server 2 (acess_token acess_token-0)
+    (value value-0) (access_type access_type-0) (response response)
+    (c c) (as c) (rs c))
+  (defstrand authorization_server 2 (access access-2)
+    (acess_token acess_token-0) (value value-0)
+    (access_type access_type-0) (c c) (as c) (rs c))
+  (defstrand client 1 (access access-2) (c c) (as c))
+  (precedes ((1 2) (0 1)) ((2 1) (1 1)) ((3 1) (0 3)) ((4 1) (3 0))
+    ((5 0) (4 0)))
+  (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
+  (operation encryption-test (added-strand client 1)
+    (enc c access-2 (ltk c c)) (4 0))
+  (traces
+    ((send (enc c access (ltk c as)))
+      (recv
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk as c)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk c c))) (recv (enc response (ltk c c))))
+    ((send (enc as access-0 (ltk as as)))
+      (recv
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk as as)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk as c))))
+    ((recv (enc c-0 access-1 (ltk c-0 as)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
+          (ltk as c-0))))
+    ((recv
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+           (pubk c)) (ltk c c))) (send (enc response (ltk c c))))
+    ((recv (enc c access-2 (ltk c c)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+            (pubk c)) (ltk c c)))) ((send (enc c access-2 (ltk c c)))))
+  (label 30)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs c) (access access) (acess_token acess_token)
         (value value) (access_type access_type) (response response))))
   (origs))
 
@@ -516,25 +594,28 @@
   (traces
     ((send (enc as access (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))) (recv (enc response (ltk as as))))
     ((recv (enc as access (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-         (ltk as as))) (send (enc response (ltk as as))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk as)) (ltk as as))) (send (enc response (ltk as as))))
     ((recv (enc as access (ltk as as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-          (ltk as as)))))
-  (label 32)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk as)) (ltk as as)))))
+  (label 31)
   (parent 0)
   (unrealized)
   (shape)
@@ -570,96 +651,35 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
-       (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((recv (enc rs access-0 (ltk rs c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-          (ltk c rs)))) ((send (enc rs access-0 (ltk rs c)))))
-  (label 33)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+            (pubk rs)) (ltk c rs))))
+    ((send (enc rs access-0 (ltk rs c)))))
+  (label 32)
   (parent 0)
   (unrealized)
   (shape)
   (maps
     ((0)
       ((c c) (as as) (rs rs) (access access) (acess_token acess_token)
-        (value value) (access_type access_type) (response response))))
-  (origs))
-
-(defskeleton single_token_simple
-  (vars
-    (access acess_token value access_type response acess_token-0 value-0
-      access_type-0 access-0 access-1 data) (c as name))
-  (defstrand client 4 (access access) (acess_token acess_token)
-    (value value) (access_type access_type) (response response) (c c)
-    (as as) (rs c))
-  (defstrand authorization_server 2 (access access-0)
-    (acess_token acess_token) (value value) (access_type access_type)
-    (c c) (as as) (rs c))
-  (defstrand resource_server 2 (acess_token acess_token-0)
-    (value value-0) (access_type access_type-0) (response response)
-    (c c) (as as) (rs c))
-  (defstrand client 3 (access access-0) (acess_token acess_token-0)
-    (value value-0) (access_type access_type-0) (c c) (as as) (rs c))
-  (defstrand client 3 (access access-1) (acess_token acess_token-0)
-    (value value-0) (access_type access_type-0) (c as) (as as) (rs c))
-  (precedes ((1 1) (0 1)) ((2 1) (0 3)) ((3 0) (1 0)) ((3 2) (2 0))
-    ((4 2) (3 1)))
-  (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
-  (operation encryption-test (added-strand client 3)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-      (ltk as c)) (3 1))
-  (traces
-    ((send (enc c access (ltk c as)))
-      (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk as c)))
-      (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk c c))) (recv (enc response (ltk c c))))
-    ((recv (enc c access-0 (ltk c as)))
-      (send
-        (enc (enc acess_token value access_type (pubk as) (pubk c))
-          (ltk as c))))
-    ((recv
-       (enc (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-         (ltk c c))) (send (enc response (ltk c c))))
-    ((send (enc c access-0 (ltk c as)))
-      (recv
-        (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-          (ltk as c)))
-      (send
-        (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-          (ltk c c))))
-    ((send (enc as access-1 (ltk as as)))
-      (recv
-        (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-          (ltk as as)))
-      (send
-        (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk c))
-          (ltk as c)))))
-  (label 34)
-  (parent 0)
-  (unrealized)
-  (shape)
-  (maps
-    ((0)
-      ((c c) (as as) (rs c) (access access) (acess_token acess_token)
         (value value) (access_type access_type) (response response))))
   (origs))
 
@@ -681,31 +701,38 @@
   (non-orig (ltk c rs) (ltk c as) (ltk rs c) (ltk as c) (privk c)
     (privk rs) (privk as))
   (operation encryption-test (displaced 4 1 authorization_server 2)
-    (enc (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-      (ltk as c)) (3 1))
+    (enc
+      (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+        (pubk rs)) (ltk as c)) (3 1))
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
-       (enc (enc acess_token value access_type (pubk as) (pubk rs))
+       (enc
+         (enc (enc acess_token value access_type (privk as)) (pubk rs))
          (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-0 (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs)))))
-  (label 35)
+  (label 34)
   (parent 0)
   (unrealized)
   (shape)
@@ -740,25 +767,28 @@
   (traces
     ((send (enc as access (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))) (recv (enc response (ltk as as))))
     ((recv (enc as access-0 (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))) ((send (enc as access-0 (ltk as as))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-         (ltk as as))) (send (enc response (ltk as as))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk as)) (ltk as as))) (send (enc response (ltk as as))))
     ((recv (enc as access (ltk as as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-          (ltk as as)))))
-  (label 37)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk as)) (ltk as as)))))
+  (label 36)
   (parent 0)
   (unrealized)
   (shape)
@@ -793,25 +823,28 @@
   (traces
     ((send (enc as access (ltk as as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as))) (recv (enc response (ltk as as))))
     ((recv (enc as access-0 (ltk as as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk as))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk as))
           (ltk as as)))) ((send (enc as access-0 (ltk as as))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-         (ltk as as))) (send (enc response (ltk as as))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk as)) (ltk as as))) (send (enc response (ltk as as))))
     ((recv (enc as access-0 (ltk as as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-          (ltk as as)))))
-  (label 38)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk as)) (ltk as as)))))
+  (label 37)
   (parent 0)
   (unrealized)
   (shape)
@@ -848,30 +881,112 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))) ((send (enc c access-0 (ltk c as))))
     ((recv
-       (enc (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((recv (enc rs access-1 (ltk rs c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk c) (pubk rs))
-          (ltk c rs)))) ((send (enc rs access-1 (ltk rs c)))))
-  (label 39)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk c))
+            (pubk rs)) (ltk c rs))))
+    ((send (enc rs access-1 (ltk rs c)))))
+  (label 38)
   (parent 0)
   (unrealized)
   (shape)
   (maps
     ((0)
       ((c c) (as as) (rs rs) (access access) (acess_token acess_token)
+        (value value) (access_type access_type) (response response))))
+  (origs))
+
+(defskeleton single_token_simple
+  (vars
+    (access acess_token value access_type response acess_token-0 value-0
+      access_type-0 access-0 access-1 access-2 data) (c as c-0 rs name))
+  (defstrand client 4 (access access) (acess_token acess_token)
+    (value value) (access_type access_type) (response response) (c c)
+    (as as) (rs c))
+  (defstrand authorization_server 2 (access access-0)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c c) (as as) (rs c))
+  (defstrand resource_server 2 (acess_token acess_token-0)
+    (value value-0) (access_type access_type-0) (response response)
+    (c c) (as as) (rs c))
+  (defstrand client 3 (access access-0) (acess_token acess_token-0)
+    (value value-0) (access_type access_type-0) (c c) (as as) (rs c))
+  (defstrand client 3 (access access-1) (acess_token acess_token-0)
+    (value value-0) (access_type access_type-0) (c as) (as as) (rs c))
+  (defstrand authorization_server 2 (access access-2)
+    (acess_token acess_token-0) (value value-0)
+    (access_type access_type-0) (c c-0) (as as) (rs rs))
+  (precedes ((1 1) (0 1)) ((2 1) (0 3)) ((3 0) (1 0)) ((3 2) (2 0))
+    ((4 2) (3 1)) ((5 1) (4 1)))
+  (non-orig (ltk c c) (ltk c as) (ltk as c) (privk c) (privk as))
+  (operation encryption-test (added-strand authorization_server 2)
+    (enc acess_token-0 value-0 access_type-0 (privk as)) (4 1))
+  (traces
+    ((send (enc c access (ltk c as)))
+      (recv
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk as c)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk c c))) (recv (enc response (ltk c c))))
+    ((recv (enc c access-0 (ltk c as)))
+      (send
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk c))
+          (ltk as c))))
+    ((recv
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk c)) (ltk c c))) (send (enc response (ltk c c))))
+    ((send (enc c access-0 (ltk c as)))
+      (recv
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk c)) (ltk as c)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk c)) (ltk c c))))
+    ((send (enc as access-1 (ltk as as)))
+      (recv
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk c)) (ltk as as)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk c)) (ltk as c))))
+    ((recv (enc c-0 access-2 (ltk c-0 as)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c-0)))))
+  (label 52)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs c) (access access) (acess_token acess_token)
         (value value) (access_type access_type) (response response))))
   (origs))
 
@@ -902,34 +1017,37 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-0 (ltk c as)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk c rs))))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk c rs))))
     ((recv (enc c access (ltk c as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))))
-  (label 46)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c)))))
+  (label 53)
   (parent 0)
   (unrealized)
   (shape)
@@ -966,34 +1084,37 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-0 (ltk c as)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk c rs))))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk c rs))))
     ((recv (enc c access-0 (ltk c as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))))
-  (label 47)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c)))))
+  (label 54)
   (parent 0)
   (unrealized)
   (shape)
@@ -1031,34 +1152,38 @@
   (traces
     ((send (enc c access (ltk c as)))
       (recv
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk c rs))) (recv (enc response (ltk rs c))))
     ((recv (enc c access-0 (ltk c as)))
       (send
-        (enc (enc acess_token value access_type (pubk as) (pubk rs))
+        (enc
+          (enc (enc acess_token value access_type (privk as)) (pubk rs))
           (ltk as c))))
     ((recv
        (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-         (ltk c rs))) (send (enc response (ltk rs c))))
+         (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+           (pubk rs)) (ltk c rs))) (send (enc response (ltk rs c))))
     ((send (enc c access-0 (ltk c as)))
       (recv
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk c rs))))
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk c rs))))
     ((recv (enc c access-1 (ltk c as)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk rs))
-          (ltk as c)))) ((send (enc c access-1 (ltk c as)))))
-  (label 48)
+          (enc (enc acess_token-0 value-0 access_type-0 (privk as))
+            (pubk rs)) (ltk as c))))
+    ((send (enc c access-1 (ltk c as)))))
+  (label 55)
   (parent 0)
   (unrealized)
   (shape)
@@ -1070,111 +1195,116 @@
 
 (defskeleton single_token_simple
   (vars
-    (access acess_token value access_type response access-0
-      acess_token-0 value-0 access_type-0 data) (as as-0 name))
+    (access acess_token value access_type response access-0 access-1
+      acess_token-0 value-0 access_type-0 data) (rs name))
   (defstrand client 4 (access access) (acess_token acess_token)
-    (value value) (access_type access_type) (response response) (c as)
-    (as as-0) (rs as))
-  (defstrand client 1 (access access-0) (c as) (as as))
+    (value value) (access_type access_type) (response response) (c rs)
+    (as rs) (rs rs))
+  (defstrand client 1 (access access-0) (c rs) (as rs))
+  (defstrand authorization_server 2 (access access-1)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c rs) (as rs) (rs rs))
   (defstrand resource_server 2 (acess_token acess_token-0)
     (value value-0) (access_type access_type-0) (response response)
-    (c as) (as as) (rs as))
+    (c rs) (as rs) (rs rs))
   (defstrand authorization_server 2 (access access-0)
     (acess_token acess_token-0) (value value-0)
-    (access_type access_type-0) (c as) (as as) (rs as))
-  (defstrand authorization_server 2 (access access)
-    (acess_token acess_token) (value value) (access_type access_type)
-    (c as) (as as-0) (rs as))
-  (precedes ((0 0) (4 0)) ((1 0) (3 0)) ((2 1) (0 3)) ((3 1) (2 0))
-    ((4 1) (0 1)))
-  (non-orig (ltk as as) (ltk as as-0) (ltk as-0 as) (privk as)
-    (privk as-0))
-  (operation generalization separated as-0)
+    (access_type access_type-0) (c rs) (as rs) (rs rs))
+  (defstrand client 1 (access access-1) (c rs) (as rs))
+  (precedes ((1 0) (4 0)) ((2 1) (0 1)) ((3 1) (0 3)) ((4 1) (3 0))
+    ((5 0) (2 0)))
+  (non-orig (ltk rs rs) (privk rs))
+  (operation generalization weakened ((1 0) (0 1)))
   (traces
-    ((send (enc as access (ltk as as-0)))
+    ((send (enc rs access (ltk rs rs)))
       (recv
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as-0 as)))
-      (send
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as as))) (recv (enc response (ltk as as))))
-    ((send (enc as access-0 (ltk as as))))
-    ((recv
-       (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-         (ltk as as))) (send (enc response (ltk as as))))
-    ((recv (enc as access-0 (ltk as as)))
+        (enc
+          (enc (enc acess_token value access_type (privk rs)) (pubk rs))
+          (ltk rs rs)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-          (ltk as as))))
-    ((recv (enc as access (ltk as as-0)))
+          (enc (enc acess_token value access_type (privk rs)) (pubk rs))
+          (ltk rs rs))) (recv (enc response (ltk rs rs))))
+    ((send (enc rs access-0 (ltk rs rs))))
+    ((recv (enc rs access-1 (ltk rs rs)))
       (send
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as-0 as)))))
-  (label 53)
+        (enc
+          (enc (enc acess_token value access_type (privk rs)) (pubk rs))
+          (ltk rs rs))))
+    ((recv
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk rs))
+           (pubk rs)) (ltk rs rs))) (send (enc response (ltk rs rs))))
+    ((recv (enc rs access-0 (ltk rs rs)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk rs))
+            (pubk rs)) (ltk rs rs))))
+    ((send (enc rs access-1 (ltk rs rs)))))
+  (label 91)
   (parent 0)
   (unrealized)
   (shape)
   (maps
     ((0)
-      ((c as) (as as-0) (rs as) (access access)
-        (acess_token acess_token) (value value)
-        (access_type access_type) (response response))))
+      ((c rs) (as rs) (rs rs) (access access) (acess_token acess_token)
+        (value value) (access_type access_type) (response response))))
   (origs))
 
 (defskeleton single_token_simple
   (vars
     (access acess_token value access_type response access-0
-      acess_token-0 value-0 access_type-0 access-1 data) (as as-0 name))
+      acess_token-0 value-0 access_type-0 data) (rs rs-0 name))
   (defstrand client 4 (access access) (acess_token acess_token)
-    (value value) (access_type access_type) (response response) (c as)
-    (as as-0) (rs as))
-  (defstrand client 1 (access access-0) (c as) (as as))
+    (value value) (access_type access_type) (response response) (c rs)
+    (as rs-0) (rs rs))
+  (defstrand client 1 (access access-0) (c rs) (as rs))
+  (defstrand authorization_server 2 (access access)
+    (acess_token acess_token) (value value) (access_type access_type)
+    (c rs) (as rs-0) (rs rs))
   (defstrand resource_server 2 (acess_token acess_token-0)
     (value value-0) (access_type access_type-0) (response response)
-    (c as) (as as) (rs as))
+    (c rs) (as rs) (rs rs))
   (defstrand authorization_server 2 (access access-0)
     (acess_token acess_token-0) (value value-0)
-    (access_type access_type-0) (c as) (as as) (rs as))
-  (defstrand authorization_server 2 (access access-1)
-    (acess_token acess_token) (value value) (access_type access_type)
-    (c as) (as as-0) (rs as))
-  (defstrand client 1 (access access-1) (c as) (as as-0))
-  (precedes ((1 0) (3 0)) ((2 1) (0 3)) ((3 1) (2 0)) ((4 1) (0 1))
-    ((5 0) (4 0)))
-  (non-orig (ltk as as) (ltk as as-0) (ltk as-0 as) (privk as)
-    (privk as-0))
-  (operation generalization separated as-0)
+    (access_type access_type-0) (c rs) (as rs) (rs rs))
+  (precedes ((0 0) (2 0)) ((1 0) (4 0)) ((2 1) (0 1)) ((3 1) (0 3))
+    ((4 1) (3 0)))
+  (non-orig (ltk rs rs) (ltk rs rs-0) (ltk rs-0 rs) (privk rs)
+    (privk rs-0))
+  (operation generalization separated rs-0)
   (traces
-    ((send (enc as access (ltk as as-0)))
+    ((send (enc rs access (ltk rs rs-0)))
       (recv
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as-0 as)))
-      (send
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as as))) (recv (enc response (ltk as as))))
-    ((send (enc as access-0 (ltk as as))))
-    ((recv
-       (enc
-         (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-         (ltk as as))) (send (enc response (ltk as as))))
-    ((recv (enc as access-0 (ltk as as)))
+        (enc
+          (enc (enc acess_token value access_type (privk rs-0))
+            (pubk rs)) (ltk rs-0 rs)))
       (send
         (enc
-          (enc acess_token-0 value-0 access_type-0 (pubk as) (pubk as))
-          (ltk as as))))
-    ((recv (enc as access-1 (ltk as as-0)))
+          (enc (enc acess_token value access_type (privk rs-0))
+            (pubk rs)) (ltk rs rs))) (recv (enc response (ltk rs rs))))
+    ((send (enc rs access-0 (ltk rs rs))))
+    ((recv (enc rs access (ltk rs rs-0)))
       (send
-        (enc (enc acess_token value access_type (pubk as-0) (pubk as))
-          (ltk as-0 as)))) ((send (enc as access-1 (ltk as as-0)))))
-  (label 54)
+        (enc
+          (enc (enc acess_token value access_type (privk rs-0))
+            (pubk rs)) (ltk rs-0 rs))))
+    ((recv
+       (enc
+         (enc (enc acess_token-0 value-0 access_type-0 (privk rs))
+           (pubk rs)) (ltk rs rs))) (send (enc response (ltk rs rs))))
+    ((recv (enc rs access-0 (ltk rs rs)))
+      (send
+        (enc
+          (enc (enc acess_token-0 value-0 access_type-0 (privk rs))
+            (pubk rs)) (ltk rs rs)))))
+  (label 103)
   (parent 0)
   (unrealized)
   (shape)
   (maps
     ((0)
-      ((c as) (as as-0) (rs as) (access access)
+      ((c rs) (as rs-0) (rs rs) (access access)
         (acess_token acess_token) (value value)
         (access_type access_type) (response response))))
   (origs))
