@@ -25,8 +25,8 @@
 			; verification that the client holds the associated private key, regardless of whether that key was pre-registered
 			; or not with the AS.
 			(send (enc c access (ltk c as)))
-			(recv (enc (enc (enc (cat acess_token value access_type) (invk (pubk as))) (pubk rs)) (ltk as c)))
-			(send (enc (enc (enc (cat acess_token value access_type) (invk (pubk as))) (pubk rs)) (ltk c rs)))
+			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk as c)))
+			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk c rs)))
 			(recv (enc response (ltk rs c)))
 		)
 	)
@@ -52,13 +52,13 @@
 			; (RS RFC Section 2 p.3) The core GNAP protocol makes no assumptions or demands on the format or contents of the access
 			; token, and in fact the token format and contents are opaque to the client instance.
 			(recv (enc c access (ltk c as)))
-			(send (enc (enc (enc (cat acess_token value access_type) (invk (pubk as))) (pubk rs)) (ltk as c)))
+			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk as c)))
 		)
 	)
 	(defrole resource_server
 		(vars (c as rs name) (acess_token value access_type response data))
 		(trace
-			(recv (enc (enc (enc (cat acess_token value access_type) (invk (pubk as))) (pubk rs)) (ltk c rs)))
+			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk c rs)))
 			(send (enc response (ltk rs c)))
 		)
 	)
