@@ -1,5 +1,5 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 300)
+	(limit 100000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
@@ -16,7 +16,7 @@
 
 (defprotocol single_token_simple basic
 	(defrole client
-		(vars (c as rs name) (access acess_token value access_type response data) )
+		(vars (c as rs name) (access acess_token value access_type response data) (n1 n2 n3 n4 text))
 		(trace
 			; (Section 12.16 p.123) Since TLS protects the entire HTTP message in transit, verification of the TLS client 
 			; certificate presented with the message provides a sufficient binding between the two.
@@ -24,14 +24,20 @@
 			; (Section 12.5 p.114) With asymmetric keys, the client needs only to send its public key to  the AS to allow for 
 			; verification that the client holds the associated private key, regardless of whether that key was pre-registered
 			; or not with the AS.
-			(send (enc c access (ltk c as)))
-			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk as c)))
-			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk c rs)))
-			(recv (enc response (ltk rs c)))
+			(send (enc c n1 (pubk as)))
+			(recv (enc as n1 n2 (pubk c)))
+			(send (enc n2 (pubk as)))
+			(send (enc c access (hash n1 n2)))
+			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+			(send (enc c n3 (pubk rs)))
+			(recv (enc as n3 n4 (pubk c)))
+			(send (enc n3 (pubk rs)))
+			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(recv (enc response (hash n3 n4)))
 		)
 	)
 	(defrole authorization_server
-		(vars (c as rs name) (access acess_token value access_type data))
+		(vars (c as rs name) (access acess_token value access_type data) (n1 n2 text))
 		(trace
 			; For access_token REQUIRED value and RECOMMENDED access with REQUIRED type are included
 			
@@ -51,21 +57,29 @@
 			
 			; (RS RFC Section 2 p.3) The core GNAP protocol makes no assumptions or demands on the format or contents of the access
 			; token, and in fact the token format and contents are opaque to the client instance.
-			(recv (enc c access (ltk c as)))
-			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk as c)))
+			(recv (enc c n1 (pubk as)))
+			(send (enc as n1 n2 (pubk c)))
+			(recv (enc n2 (pubk as)))
+			(recv (enc c access (hash n1 n2)))
+			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 		)
 	)
 	(defrole resource_server
-		(vars (c as rs name) (acess_token value access_type response data))
+		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 text))
 		(trace
-			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (ltk c rs)))
-			(send (enc response (ltk rs c)))
+			(recv (enc c n3 (pubk rs)))
+			(send (enc as n3 n4 (pubk c)))
+			(recv (enc n3 (pubk rs)))
+			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(send (enc response (hash n3 n4)))
 		)
 	)
 )
 
 (defskeleton single_token_simple
-  (vars (c as rs name))
-  (defstrand client 4 (c c) (as as) (rs rs))
-  (non-orig (privk c) (privk as) (privk rs) (ltk c as) (ltk as c) (ltk c rs) (ltk rs c))
+  (vars (c as rs name) (n1 n3 text))
+  (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+  (uniq-orig n1 n3)
+  (non-orig (privk c) (privk as) (privk rs))
+  (neq (c as) (c rs) (as rs)) 
 )
