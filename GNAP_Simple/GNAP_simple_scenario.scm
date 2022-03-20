@@ -1,5 +1,5 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 100000)
+	(limit 20000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
@@ -30,8 +30,8 @@
 			(send (enc c access (hash n1 n2)))
 			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 			(send (enc c n3 (pubk rs)))
-			(recv (enc as n3 n4 (pubk c)))
-			(send (enc n3 (pubk rs)))
+			(recv (enc rs n3 n4 (pubk c)))
+			(send (enc n4 (pubk rs)))
 			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
 			(recv (enc response (hash n3 n4)))
 		)
@@ -68,8 +68,8 @@
 		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 text))
 		(trace
 			(recv (enc c n3 (pubk rs)))
-			(send (enc as n3 n4 (pubk c)))
-			(recv (enc n3 (pubk rs)))
+			(send (enc rs n3 n4 (pubk c)))
+			(recv (enc n4 (pubk rs)))
 			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
 			(send (enc response (hash n3 n4)))
 		)
