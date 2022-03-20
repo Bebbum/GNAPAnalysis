@@ -1,5 +1,5 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 20000)
+	(limit 100000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
