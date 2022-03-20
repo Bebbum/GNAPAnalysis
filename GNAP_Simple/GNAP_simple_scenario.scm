@@ -1,18 +1,18 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 100000)
+	(limit 20000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
 ; 			SCENARIO DESCRIPTION			;
 ;*******************************************;
-; 1. Secure TLS connection is assumed for all cases using uni-directional long-term keys. (ex. (ltk c as) (ltk as c))
+; 1. Secure TLS connection is created by utlizing Needham-Schroeder-Lowe
 ; 2. The client requests a token from the AS using its identity and what access it requires.
 ; 3. The AS evaluates the request and generates a token, signs it with its public key and encrypts it all with the public key of
 ; the RS since the contents of the token are opaque to the client instance.
 ; 4. The client then uses this token to access the RS.
 ; 5. The RS processes the request and sends an acknowledgement that the message was recieved.
-; 6. In the skeleton definition we ensure the attacker does not have access to any of the private keys as well as keys related
-; to the secure TLS connection.
+; 6. In the skeleton definition we ensure the attacker does not have access to any of the private keys and that each defined role
+; is unique/non-interchangeable
 
 (defprotocol single_token_simple basic
 	(defrole client
