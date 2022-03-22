@@ -1,42 +1,55 @@
 (herald "Asynchronous Grant Negotiation and Authorization Protocol"
-	(limit 10000)
+	(limit 100000)
 	(comment "This protocol allows a piece of software, the client instance, to asynchronously request delegated authorization to resource servers and to request direct information"))
 
 
 (defprotocol gnap_asynchronous basic 
   (defrole client
-    (vars (c as rs name) (access access_token api continuation_uri continuation_token response value data) (n1 n2 n3 text) (k akey))
-    (trace
-	(send (enc c access (pubk c) (ltk c as))) ; client requests access at the AS encrypted with its shared symmetric key		
-	(recv (enc (enc n1 (cat continuation_token continuation_uri) (pubk c)) (ltk c as)))
-        (send (enc n1 access continuation_token (pubk c) (ltk c as))) ; AS responds with the information the client instance will need to continue the request 
-	(recv (enc (enc n2 (enc (cat access_token value access) (invk k)) (pubk c)) (ltk c as))) ; receives and decrypts message using private key whic results in a usable access token
-	(send (enc (enc n3 (enc (cat access_token value access) (invk k)) (pubk c)) (ltk c rs))) ; The client instance uses the access token to call the RS.
-	(recv (enc (enc response (pubk c)) (ltk c rs)))
-    )
+  	(vars (as c rs name) (access access_token access_type continuation_token continuation_uri response value data) (n1 n2 n3 n4 text))
+  	(trace
+		(send (enc c n1 (pubk as)))
+		(recv (enc as n1 n2 (pubk c)))
+		(send (enc n2 (pubk as)))
+		(send (enc c access (hash n1 n2)))
+		(recv (enc (enc (enc (cat continuation_token continuation_uri) (privk as)) (pubk rs)) (hash n1 n2)))
+		(send (enc (enc (enc (cat continuation_token access) (privk as)) (pubk rs)) (hash n1 n2)))
+		(recv (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+		(send (enc c n3 (pubk rs)))
+		(recv (enc as n3 n4 (pubk c)))
+		(send (enc n4 (pubk rs)))
+		(send (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+		(recv (enc response (hash n3 n4)))
+    	)
   )
   (defrole authorization_server
-    (vars (c as ro name) (access access_token continuation_uri continuation_token value data) (n1 n2 text) (k akey))
-    (trace
-	(recv (enc c access (pubk c) (ltk c as))) ; AS processes request and determines what is needed to fulfill the request
-	(send (enc (enc n1 (cat continuation_token continuation_uri) (pubk c)) (ltk c as)))
-        (recv (enc access continuation_token (pubk c) (ltk c as))) ; AS responds with the information the client instance will need to continue the request 
-	(send (enc (enc n2 (enc (cat access_token value access) (invk k)) (pubk c)) (ltk c as))) ; AS signs token and binds it to client's public key
-    )
+  	(vars (as c rs name) (access access_token access_type continuation_token continuation_uri value data) (n1 n2 text) (k akey))
+  	(trace
+		(recv (enc c n1 (pubk as)))
+		(send (enc as n1 n2 (pubk c)))
+		(recv (enc n2 (pubk as)))
+		(recv (enc c access (hash n1 n2)))
+		(send (enc (enc (enc (cat continuation_token continuation_uri) (privk as)) (pubk rs)) (hash n1 n2)))
+		(recv (enc (enc (enc (cat continuation_token access) (privk as)) (pubk rs)) (hash n1 n2)))
+		(send (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+    	)
   ) 
 
   (defrole resource_server
-  	(vars (c rs name) (access_token value access response data) (n3 text) (k akey))
+  	(vars (as c rs name) (access access_token access_type response value data) (n3 n4 text))
   	(trace
-  		(recv (enc (enc n3 (enc (cat access_token value access) (invk k)) (pubk c)) (ltk c rs))) ; RS decrypts and validates the client's token
-  		(send (enc (enc response (pubk c)) (ltk c rs)))
+		(recv (enc c n3 (pubk rs)))
+		(send (enc rs n3 n4 (pubk c)))
+		(recv (enc n4 (pubk rs)))
+		(recv (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+		(send (enc response (hash n3 n4)))
   	)
   )
 )
 
 (defskeleton gnap_asynchronous
-  (vars (c as rs name) (continuation_uri continuation_token data) (k akey) (n3 text))
-  (defstrand client 6 (c c) (as as) (rs rs) (n3 n3) (k k))
-  (non-orig (ltk c as) (ltk c rs) k)
-  (uniq-orig n3)
+  (vars (c as rs name) (n1 n3 text))
+  (defstrand client 12 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+  (uniq-orig n1 n3)
+  (non-orig (privk c) (privk as) (privk rs))
+  (neq (c as) (c rs) (as rs)) 
 )
