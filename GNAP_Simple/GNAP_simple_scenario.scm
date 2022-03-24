@@ -1,5 +1,5 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 20000)
+	(limit 5000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
@@ -16,7 +16,7 @@
 
 (defprotocol single_token_simple basic
 	(defrole client
-		(vars (c as rs name) (access acess_token value access_type response data) (n1 n2 n3 n4 text))
+		(vars (c as rs name) (access acess_token value access_type response data) (n1 n2 n3 n4 token text))
 		(trace
 			; (Section 12.16 p.123) Since TLS protects the entire HTTP message in transit, verification of the TLS client 
 			; certificate presented with the message provides a sufficient binding between the two.
@@ -28,11 +28,11 @@
 			(recv (enc as n1 n2 (pubk c)))
 			(send (enc n2 (pubk as)))
 			(send (enc c access (hash n1 n2)))
-			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+			(recv (enc token (hash n1 n2)))
 			(send (enc c n3 (pubk rs)))
 			(recv (enc rs n3 n4 (pubk c)))
 			(send (enc n4 (pubk rs)))
-			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(send (enc token (hash n3 n4)))
 			(recv (enc response (hash n3 n4)))
 		)
 	)
@@ -61,16 +61,16 @@
 			(send (enc as n1 n2 (pubk c)))
 			(recv (enc n2 (pubk as)))
 			(recv (enc c access (hash n1 n2)))
-			(send (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+			(send (enc (enc (enc  (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 		)
 	)
 	(defrole resource_server
-		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 text))
+		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 token text))
 		(trace
 			(recv (enc c n3 (pubk rs)))
 			(send (enc rs n3 n4 (pubk c)))
 			(recv (enc n4 (pubk rs)))
-			(recv (enc (enc (enc (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(recv (enc (enc (enc  (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
 			(send (enc response (hash n3 n4)))
 		)
 	)
@@ -80,6 +80,22 @@
   (vars (c as rs name) (n1 n3 text))
   (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
   (uniq-orig n1 n3)
+  (non-orig (privk c) (privk as) (privk rs))
+  (neq (c as) (c rs) (as rs)) 
+)
+
+(defskeleton single_token_simple
+  (vars (c as rs name) (n2 text))
+  (defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
+  (uniq-orig n2)
+  (non-orig (privk c) (privk as) (privk rs))
+  (neq (c as) (c rs) (as rs)) 
+)
+
+(defskeleton single_token_simple
+  (vars (c as rs name) (n4 text))
+  (defstrand resource_server 5 (c c) (as as) (rs rs) (n4 n4))
+  (uniq-orig n4)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
 )
