@@ -1,10 +1,10 @@
 (herald "Grant Negotiation and Authorization Protocol"
-	(limit 1000)
+	(limit 20000)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 (defprotocol token_refresh basic
 	(defrole client
-		(vars (c as rs name) (access access_token access_type management_uri management_uri_new response response_error response_new value data) (n1 n2 n3 n4 token token_new text))
+		(vars (c as rs name) (access management_uri management_uri_new response response_error response_new data) (n1 n2 n3 n4 text) (token token_new mesg))
 		(trace
 			; (Section 12.16 p.123) Since TLS protects the entire HTTP message in transit, verification of the TLS client 
 			; certificate presented with the message provides a sufficient binding between the two.
@@ -16,11 +16,11 @@
 			(recv (enc as n1 n2 (pubk c)))
 			(send (enc n2 (pubk as)))
 			(send (enc c access (hash n1 n2)))
-			(recv (enc management_uri (enc (cat access_token value access_type) (privk as)) (hash n1 n2)))
+			(recv (enc management_uri token (hash n1 n2)))
 			(send (enc c n3 (pubk rs)))
 			(recv (enc rs n3 n4 (pubk c)))
 			(send (enc n4 (pubk rs)))
-			(send (enc (enc (cat access_token value access_type) (privk as)) (hash n3 n4)))
+			(send (enc token (hash n3 n4)))
 			(recv (enc response (hash n3 n4)))
 			(send (enc token (hash n3 n4)))
 			(recv (enc response_error (hash n3 n4)))
@@ -51,25 +51,25 @@
 			; token, and in fact the token format and contents are opaque to the client instance.
 			(recv (enc c n1 (pubk as)))
 			(send (enc as n1 n2 (pubk c))) 
-			(recv (enc n2 (pubk as))) 
+			(recv (enc n2 (pubk as)))
 			(recv (enc c access (hash n1 n2)))
 			(send (enc management_uri (enc (cat access_token value access_type) (privk as)) (hash n1 n2)))
-			(recv (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
-			(send (enc management_uri_new (enc (enc (cat access_token_new value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
+			(recv (enc (enc (cat access_token value access_type) (privk as)) (hash n1 n2)))
+			(send (enc management_uri_new (enc (cat access_token_new value access_type) (privk as)) (hash n1 n2)))
 			
 		)
 	)
 	(defrole resource_server
-		(vars (c as rs name) (access_token access_token_new value access_type response response_error response_new data) (n3 n4 token req1 req2 text))
+		(vars (c as rs name) (access_token access_token_new value access_type response response_error response_new data) (n3 n4 text))
 		(trace
 			(recv (enc c n3 (pubk rs)))
 			(send (enc rs n3 n4 (pubk c)))
 			(recv (enc n4 (pubk rs)))
 			(recv (enc (enc (cat access_token value access_type) (privk as)) (hash n3 n4)))
 			(send (enc response (hash n3 n4)))
-			(recv (enc req2 (enc (enc  (cat access_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(recv (enc (enc (cat access_token value access_type) (privk as)) (hash n3 n4)))
 			(send (enc response_error (hash n3 n4)))
-			(recv (enc req1 (enc (enc (cat access_token_new value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
+			(recv (enc (enc (cat access_token_new value access_type) (privk as)) (hash n3 n4)))
 			(send (enc response_new (hash n3 n4)))
 		)
 	)
@@ -77,7 +77,7 @@
 
 (defskeleton token_refresh 
   (vars (c as rs name) (n1 n3 text))
-  (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+  (defstrand client 16 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
   (uniq-orig n1 n3)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
@@ -85,7 +85,7 @@
 
 (defskeleton token_refresh 
   (vars (c as name) (n2 text))
-  (defstrand authorization_server 5 (c c) (as as) (n2 n2))
+  (defstrand authorization_server 7 (c c) (as as) (n2 n2))
   (uniq-orig n2)
   (non-orig (privk c) (privk as))
   (neq (c as)) 
@@ -93,7 +93,7 @@
 
 (defskeleton token_refresh 
   (vars (c as rs name) (n4 text))
-  (defstrand resource_server 5 (c c) (as as) (rs rs) (n4 n4))
+  (defstrand resource_server 9 (c c) (as as) (rs rs) (n4 n4))
   (uniq-orig n4)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
