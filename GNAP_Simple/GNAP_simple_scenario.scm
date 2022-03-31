@@ -52,21 +52,21 @@
 	)
 )
 
-(defskeleton single_token_simple
-  (vars (c as rs name) (n1 n3 text))
-  (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
-  (uniq-orig n1 n3)
-  (non-orig (privk c) (privk as) (privk rs))
-  (neq (c as) (c rs) (as rs)) 
-)
+; (defskeleton single_token_simple
+  ; (vars (c as rs name) (n1 n3 text))
+  ; (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+  ; (uniq-orig n1 n3)
+  ; (non-orig (privk c) (privk as) (privk rs))
+  ; (neq (c as) (c rs) (as rs)) 
+; )
 
-(defskeleton single_token_simple
-  (vars (c as rs name) (n2 text))
-  (defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
-  (uniq-orig n2)
-  (non-orig (privk c) (privk as) (privk rs))
-  (neq (c as) (c rs) (as rs)) 
-)
+; (defskeleton single_token_simple
+  ; (vars (c as rs name) (n2 text))
+  ; (defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
+  ; (uniq-orig n2)
+  ; (non-orig (privk c) (privk as) (privk rs))
+  ; (neq (c as) (c rs) (as rs)) 
+; )
 
 (defskeleton single_token_simple
   (vars (c as rs name) (n4 text))
