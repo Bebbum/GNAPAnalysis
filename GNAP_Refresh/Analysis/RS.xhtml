@@ -1,0 +1,857 @@
+<?xml version="1.0"?>
+<!-- CPSA 3.6.9 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+ <title>Grant Negotiation and Authorization Protocol</title>
+ <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+ <style>
+  svg.diagram { border-width: 1px; border-style: solid }
+ </style>
+</head>
+<body>
+
+<pre>(comment &quot;CPSA 3.6.9&quot;)
+(comment &quot;Extracted shapes&quot;)
+(herald &quot;Grant Negotiation and Authorization Protocol&quot; (limit 3000)
+  (depth 1000) (bound 16)
+  (comment
+    &quot;This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information&quot;))
+(comment &quot;CPSA 3.6.9&quot;)
+(comment &quot;All input read from GNAP_refresh_scenario.scm&quot;)
+(comment &quot;Step count limited to 3000&quot;)
+(comment &quot;Strand count bounded at 16&quot;)
+(comment &quot;Tree depth bounded at 1000&quot;)</pre>
+
+<p id="t0">Tree 0, POV <a href="#k0">0</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='129.840pt' height='304.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 129.840 304.920' font-size='12.000'>
+  <text
+   x='89.880' y='251.040'
+   style='font-weight: bold; text-anchor: middle; fill: blue;'
+   onclick='window.open(&quot;#k532&quot;, &quot;_self&quot;)'>532</text>
+  <line
+   x1='39.960' y1='152.460' x2='89.880' y2='264.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <text
+   x='89.880' y='176.040'
+   style='font-weight: bold; text-anchor: middle; fill: blue;'
+   onclick='window.open(&quot;#k513&quot;, &quot;_self&quot;)'>513</text>
+  <line
+   x1='39.960' y1='152.460' x2='89.880' y2='189.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <text
+   x='89.880' y='101.040'
+   style='font-weight: bold; text-anchor: middle; fill: blue;'
+   onclick='window.open(&quot;#k122&quot;, &quot;_self&quot;)'>122</text>
+  <line
+   x1='39.960' y1='152.460' x2='89.880' y2='114.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <text
+   x='89.880' y='26.040'
+   style='font-weight: bold; text-anchor: middle; fill: blue;'
+   onclick='window.open(&quot;#k116&quot;, &quot;_self&quot;)'>116</text>
+  <line
+   x1='39.960' y1='152.460' x2='89.880' y2='39.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <text
+   x='39.960' y='138.540' style='text-anchor: middle; fill: black;'
+   onclick='window.open(&quot;#k0&quot;, &quot;_self&quot;)'>0</text>
+  </svg></div>
+
+<pre>(defprotocol token_refresh basic
+  (defrole client
+    (vars (c as rs name)
+      (access management_uri management_uri_new response response_error
+        response_new data) (n1 n2 n3 n4 text) (token token_new mesg))
+    (trace (send (enc c n1 (pubk as))) (recv (enc as n1 n2 (pubk c)))
+      (send (enc n2 (pubk as))) (send (enc c access (hash n1 n2)))
+      (recv (enc management_uri token (hash n1 n2)))
+      (send (enc c n3 (pubk rs))) (recv (enc rs n3 n4 (pubk c)))
+      (send (enc n4 (pubk rs))) (send (enc token (hash n3 n4)))
+      (recv (enc response (hash n3 n4))) (send (enc token (hash n3 n4)))
+      (recv (enc response_error (hash n3 n4)))
+      (send (enc token (hash n1 n2)))
+      (recv (enc management_uri_new token_new (hash n1 n2)))
+      (send (enc token_new (hash n3 n4)))
+      (recv (enc response_new (hash n3 n4)))))
+  (defrole authorization_server
+    (vars (c as rs name)
+      (access access_token access_token_new access_type management_uri
+        management_uri_new value data) (n1 n2 text))
+    (trace (recv (enc c n1 (pubk as))) (send (enc as n1 n2 (pubk c)))
+      (recv (enc n2 (pubk as))) (recv (enc c access (hash n1 n2)))
+      (send
+        (enc management_uri
+          (enc (enc access_token value access_type (privk as))
+            (pubk rs)) (hash n1 n2)))
+      (recv
+        (enc
+          (enc (enc access_token value access_type (privk as))
+            (pubk rs)) (hash n1 n2)))
+      (send
+        (enc management_uri_new
+          (enc (enc access_token_new value access_type (privk as))
+            (pubk rs)) (hash n1 n2)))))
+  (defrole resource_server
+    (vars (c as rs name)
+      (access_token access_token_new value access_type response
+        response_error response_new data) (n3 n4 text))
+    (trace (recv (enc c n3 (pubk rs))) (send (enc rs n3 n4 (pubk c)))
+      (recv (enc n4 (pubk rs)))
+      (recv
+        (enc
+          (enc (enc access_token value access_type (privk as))
+            (pubk rs)) (hash n3 n4))) (send (enc response (hash n3 n4)))
+      (recv
+        (enc
+          (enc (enc access_token value access_type (privk as))
+            (pubk rs)) (hash n3 n4)))
+      (send (enc response_error (hash n3 n4)))
+      (recv
+        (enc
+          (enc (enc access_token_new value access_type (privk as))
+            (pubk rs)) (hash n3 n4)))
+      (send (enc response_new (hash n3 n4))))))</pre>
+
+<p id="k0">Item <a href="#t0">0</a>, Children: <a href="#k116">116</a> <a href="#k122">122</a> <a href="#k513">513</a> <a href="#k532">532</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='79.920pt' height='754.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 79.920 754.920' font-size='12.000'>
+  <defs>
+   <marker
+    id='arrow' orient='auto' markerWidth='5' markerHeight='10' refX='5'
+    refY='5'>
+    <path
+     d='M 0 0 5 5 0 10'
+     style='stroke-width: 2; fill: none; stroke: black;'/></marker>
+   </defs>
+  <line
+   x1='39.960' y1='114.960' x2='39.960' y2='714.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <g><title>(enc response_new (hash n3 n4))</title>
+   <circle cx='39.960' cy='714.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token_new value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: red;' cx='39.960' cy='639.960' r='6.000'/></g>
+  <g><title>(enc response_error (hash n3 n4))</title>
+   <circle cx='39.960' cy='564.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: red;' cx='39.960' cy='489.960' r='6.000'/></g>
+  <g><title>(enc response (hash n3 n4))</title>
+   <circle cx='39.960' cy='414.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: red;' cx='39.960' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle style='fill: red;' cx='39.960' cy='264.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle cx='39.960' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='114.960' r='6.000'/></g>
+  <g>
+   <title>((n3 n3) (n4 n4) (access_token access_token) (access_token_new access_token_new) (value value) (access_type access_type) (response response) (response_error response_error) (response_new response_new) (c c) (as as) (rs rs))</title>
+   <text
+    x='39.960' y='77.460'
+    style='text-anchor: middle;'>resource_server</text></g>
+  <text
+   x='39.960' y='39.960'
+   style='text-anchor: middle;'>token_refresh 0</text></svg></div>
+
+<pre>(defskeleton token_refresh
+  (vars (n4 n3 text)
+    (access_token access_token_new value access_type response
+      response_error response_new data) (c as rs name))
+  (defstrand resource_server 9 (n3 n3) (n4 n4)
+    (access_token access_token) (access_token_new access_token_new)
+    (value value) (access_type access_type) (response response)
+    (response_error response_error) (response_new response_new) (c c)
+    (as as) (rs rs))
+  (neq (c as) (c rs) (as rs))
+  (non-orig (privk c) (privk as) (privk rs))
+  (uniq-orig n4)
+  (label 0)
+  (unrealized (0 2) (0 3) (0 5) (0 7))
+  (origs (n4 (0 1)))
+  (comment &quot;2 in cohort - 2 not yet seen&quot;))</pre>
+
+<p id="k116">Item <a href="#t0">116</a>, Parent: <a href="#k0">0</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='279.840pt' height='1279.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 279.840 1279.920' font-size='12.000'>
+  <defs>
+   <marker
+    id='arrow' orient='auto' markerWidth='5' markerHeight='10' refX='5'
+    refY='5'>
+    <path
+     d='M 0 0 5 5 0 10'
+     style='stroke-width: 2; fill: none; stroke: black;'/></marker>
+   </defs>
+  <line
+   x1='239.880' y1='114.960' x2='239.880' y2='564.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='139.920' y1='264.960' x2='139.920' y2='864.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='39.960' y1='639.960' x2='39.960' y2='1239.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <path
+   d='M 239.880 564.960 Q 192.900 564.960 145.920 564.960'
+   style='stroke-dasharray: 6.000,2.400; stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc management_uri_new (enc (enc access_token value access_type (privk as)) (pubk rs-0)) (hash n1-0 n2-0))</title>
+   <circle cx='239.880' cy='564.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token-0 value access_type (privk as)) (pubk rs-0)) (hash n1-0 n2-0))</title>
+   <circle style='fill: blue;' cx='239.880' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri-0 (enc (enc access_token-0 value access_type (privk as)) (pubk rs-0)) (hash n1-0 n2-0))</title>
+   <circle cx='239.880' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c-0 access-0 (hash n1-0 n2-0))</title>
+   <circle style='fill: blue;' cx='239.880' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2-0 (pubk as))</title>
+   <circle style='fill: blue;' cx='239.880' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as n1-0 n2-0 (pubk c-0))</title>
+   <circle cx='239.880' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c-0 n1-0 (pubk as))</title>
+   <circle style='fill: blue;' cx='239.880' cy='114.960' r='6.000'/></g>
+  <path
+   d='M 139.920 864.960 Q 92.940 864.960 45.960 864.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle cx='139.920' cy='864.960' r='6.000'/></g>
+  <path
+   d='M 139.920 789.960 Q 92.940 789.960 45.960 789.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='139.920' cy='789.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='714.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='139.920' cy='639.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n1 n2))</title>
+   <circle style='fill: blue;' cx='139.920' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c access (hash n1 n2))</title>
+   <circle cx='139.920' cy='489.960' r='6.000'/></g>
+  <g><title>(enc n2 (pubk as-0))</title>
+   <circle cx='139.920' cy='414.960' r='6.000'/></g>
+  <g><title>(enc as-0 n1 n2 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='339.960' r='6.000'/></g>
+  <g><title>(enc c n1 (pubk as-0))</title>
+   <circle cx='139.920' cy='264.960' r='6.000'/></g>
+  <g><title>(enc response_new (hash n3 n4))</title>
+   <circle cx='39.960' cy='1239.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1164.960' r='6.000'/></g>
+  <g><title>(enc response_error (hash n3 n4))</title>
+   <circle cx='39.960' cy='1089.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1014.960' r='6.000'/></g>
+  <g><title>(enc response (hash n3 n4))</title>
+   <circle cx='39.960' cy='939.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='864.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='789.960' r='6.000'/></g>
+  <path
+   d='M 39.960 714.960 Q 86.940 714.960 133.920 714.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle cx='39.960' cy='714.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='639.960' r='6.000'/></g>
+  <g>
+   <title>((n1 n1-0) (n2 n2-0) (access access-0) (access_token access_token-0) (access_token_new access_token) (access_type access_type) (management_uri management_uri-0) (management_uri_new management_uri_new) (value value) (c c-0) (as as) (rs rs-0))</title>
+   <text
+    x='239.880' y='77.460'
+    style='text-anchor: middle;'>authorization_server</text></g>
+  <g>
+   <title>((token (enc (enc access_token value access_type (privk as)) (pubk rs))) (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access) (management_uri management_uri) (c c) (as as-0) (rs rs))</title>
+   <text
+    x='139.920' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((n3 n3) (n4 n4) (access_token access_token) (access_token_new access_token) (value value) (access_type access_type) (response response) (response_error response_error) (response_new response_new) (c c) (as as) (rs rs))</title>
+   <text
+    x='39.960' y='77.460'
+    style='text-anchor: middle;'>resource_server</text></g>
+  <text
+   x='139.920' y='39.960'
+   style='text-anchor: middle;'>token_refresh 116 (realized)</text>
+  </svg></div>
+
+<pre>(defskeleton token_refresh
+  (vars (n4 n3 n1 n2 n1-0 n2-0 text)
+    (access_token value access_type response response_error response_new
+      access management_uri access-0 access_token-0 management_uri-0
+      management_uri_new data) (as c as-0 rs c-0 rs-0 name))
+  (defstrand resource_server 9 (n3 n3) (n4 n4)
+    (access_token access_token) (access_token_new access_token)
+    (value value) (access_type access_type) (response response)
+    (response_error response_error) (response_new response_new) (c c)
+    (as as) (rs rs))
+  (defstrand client 9
+    (token
+      (enc (enc access_token value access_type (privk as)) (pubk rs)))
+    (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access)
+    (management_uri management_uri) (c c) (as as-0) (rs rs))
+  (defstrand authorization_server 7 (n1 n1-0) (n2 n2-0)
+    (access access-0) (access_token access_token-0)
+    (access_token_new access_token) (access_type access_type)
+    (management_uri management_uri-0)
+    (management_uri_new management_uri_new) (value value) (c c-0)
+    (as as) (rs rs-0))
+  (precedes ((0 1) (1 6)) ((1 7) (0 2)) ((1 8) (0 3)) ((2 6) (1 4)))
+  (neq (c as) (c rs) (as rs))
+  (non-orig (privk as) (privk c) (privk rs))
+  (uniq-orig n4)
+  (operation encryption-test (displaced 3 1 client 9)
+    (enc
+      (enc (enc access_token_new value access_type (privk as))
+        (pubk rs)) (hash n3 n4)) (0 7))
+  (label 116)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs rs) (n4 n4) (access_token access_token)
+        (access_token_new access_token) (value value)
+        (access_type access_type) (response response)
+        (response_error response_error) (response_new response_new)
+        (n3 n3))))
+  (origs (n4 (0 1))))</pre>
+
+<p id="k122">Item <a href="#t0">122</a>, Parent: <a href="#k0">0</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='279.840pt' height='1129.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 279.840 1129.920' font-size='12.000'>
+  <defs>
+   <marker
+    id='arrow' orient='auto' markerWidth='5' markerHeight='10' refX='5'
+    refY='5'>
+    <path
+     d='M 0 0 5 5 0 10'
+     style='stroke-width: 2; fill: none; stroke: black;'/></marker>
+   </defs>
+  <line
+   x1='239.880' y1='114.960' x2='239.880' y2='414.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='139.920' y1='114.960' x2='139.920' y2='714.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='39.960' y1='489.960' x2='39.960' y2='1089.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <path
+   d='M 239.880 414.960 Q 192.900 414.960 145.920 414.960'
+   style='stroke-dasharray: 6.000,2.400; stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc management_uri-0 (enc (enc access_token value access_type (privk as)) (pubk rs-0)) (hash n1-0 n2-0))</title>
+   <circle cx='239.880' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c-0 access-0 (hash n1-0 n2-0))</title>
+   <circle style='fill: blue;' cx='239.880' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2-0 (pubk as))</title>
+   <circle style='fill: blue;' cx='239.880' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as n1-0 n2-0 (pubk c-0))</title>
+   <circle cx='239.880' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c-0 n1-0 (pubk as))</title>
+   <circle style='fill: blue;' cx='239.880' cy='114.960' r='6.000'/></g>
+  <path
+   d='M 139.920 714.960 Q 92.940 714.960 45.960 714.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle cx='139.920' cy='714.960' r='6.000'/></g>
+  <path
+   d='M 139.920 639.960 Q 92.940 639.960 45.960 639.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='139.920' cy='639.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='139.920' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n1 n2))</title>
+   <circle style='fill: blue;' cx='139.920' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c access (hash n1 n2))</title>
+   <circle cx='139.920' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2 (pubk as-0))</title>
+   <circle cx='139.920' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as-0 n1 n2 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c n1 (pubk as-0))</title>
+   <circle cx='139.920' cy='114.960' r='6.000'/></g>
+  <g><title>(enc response_new (hash n3 n4))</title>
+   <circle cx='39.960' cy='1089.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1014.960' r='6.000'/></g>
+  <g><title>(enc response_error (hash n3 n4))</title>
+   <circle cx='39.960' cy='939.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='864.960' r='6.000'/></g>
+  <g><title>(enc response (hash n3 n4))</title>
+   <circle cx='39.960' cy='789.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='714.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='639.960' r='6.000'/></g>
+  <path
+   d='M 39.960 564.960 Q 86.940 564.960 133.920 564.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle cx='39.960' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>((n1 n1-0) (n2 n2-0) (access access-0) (access_token access_token) (access_type access_type) (management_uri management_uri-0) (value value) (c c-0) (as as) (rs rs-0))</title>
+   <text
+    x='239.880' y='77.460'
+    style='text-anchor: middle;'>authorization_server</text></g>
+  <g>
+   <title>((token (enc (enc access_token value access_type (privk as)) (pubk rs))) (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access) (management_uri management_uri) (c c) (as as-0) (rs rs))</title>
+   <text
+    x='139.920' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((n3 n3) (n4 n4) (access_token access_token) (access_token_new access_token) (value value) (access_type access_type) (response response) (response_error response_error) (response_new response_new) (c c) (as as) (rs rs))</title>
+   <text
+    x='39.960' y='77.460'
+    style='text-anchor: middle;'>resource_server</text></g>
+  <text
+   x='139.920' y='39.960'
+   style='text-anchor: middle;'>token_refresh 122 (realized)</text>
+  </svg></div>
+
+<pre>(defskeleton token_refresh
+  (vars (n4 n3 n1 n2 n1-0 n2-0 text)
+    (access_token value access_type response response_error response_new
+      access management_uri access-0 management_uri-0 data)
+    (as c as-0 rs c-0 rs-0 name))
+  (defstrand resource_server 9 (n3 n3) (n4 n4)
+    (access_token access_token) (access_token_new access_token)
+    (value value) (access_type access_type) (response response)
+    (response_error response_error) (response_new response_new) (c c)
+    (as as) (rs rs))
+  (defstrand client 9
+    (token
+      (enc (enc access_token value access_type (privk as)) (pubk rs)))
+    (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access)
+    (management_uri management_uri) (c c) (as as-0) (rs rs))
+  (defstrand authorization_server 5 (n1 n1-0) (n2 n2-0)
+    (access access-0) (access_token access_token)
+    (access_type access_type) (management_uri management_uri-0)
+    (value value) (c c-0) (as as) (rs rs-0))
+  (precedes ((0 1) (1 6)) ((1 7) (0 2)) ((1 8) (0 3)) ((2 4) (1 4)))
+  (neq (c as) (c rs) (as rs))
+  (non-orig (privk as) (privk c) (privk rs))
+  (uniq-orig n4)
+  (operation encryption-test (displaced 3 1 client 9)
+    (enc
+      (enc (enc access_token_new value access_type (privk as))
+        (pubk rs)) (hash n3 n4)) (0 7))
+  (label 122)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs rs) (n4 n4) (access_token access_token)
+        (access_token_new access_token) (value value)
+        (access_type access_type) (response response)
+        (response_error response_error) (response_new response_new)
+        (n3 n3))))
+  (origs (n4 (0 1))))</pre>
+
+<p id="k513">Item <a href="#t0">513</a>, Parent: <a href="#k0">0</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='379.800pt' height='1279.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 379.800 1279.920' font-size='12.000'>
+  <defs>
+   <marker
+    id='arrow' orient='auto' markerWidth='5' markerHeight='10' refX='5'
+    refY='5'>
+    <path
+     d='M 0 0 5 5 0 10'
+     style='stroke-width: 2; fill: none; stroke: black;'/></marker>
+   </defs>
+  <line
+   x1='339.840' y1='114.960' x2='339.840' y2='564.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='239.880' y1='264.960' x2='239.880' y2='864.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='139.920' y1='114.960' x2='139.920' y2='639.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='39.960' y1='489.960' x2='39.960' y2='1239.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <path
+   d='M 339.840 564.960 Q 292.860 564.960 245.880 564.960'
+   style='stroke-dasharray: 6.000,2.400; stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc management_uri_new (enc (enc access_token value access_type (privk as)) (pubk rs-0)) (hash n1-1 n2-1))</title>
+   <circle cx='339.840' cy='564.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token-0 value access_type (privk as)) (pubk rs-0)) (hash n1-1 n2-1))</title>
+   <circle style='fill: blue;' cx='339.840' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri-1 (enc (enc access_token-0 value access_type (privk as)) (pubk rs-0)) (hash n1-1 n2-1))</title>
+   <circle cx='339.840' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c-0 access-1 (hash n1-1 n2-1))</title>
+   <circle style='fill: blue;' cx='339.840' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2-1 (pubk as))</title>
+   <circle style='fill: blue;' cx='339.840' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as n1-1 n2-1 (pubk c-0))</title>
+   <circle cx='339.840' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c-0 n1-1 (pubk as))</title>
+   <circle style='fill: blue;' cx='339.840' cy='114.960' r='6.000'/></g>
+  <path
+   d='M 239.880 864.960 Q 142.920 827.460 45.960 864.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle cx='239.880' cy='864.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='239.880' cy='789.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='239.880' cy='714.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='239.880' cy='639.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri-0 (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n1-0 n2-0))</title>
+   <circle style='fill: blue;' cx='239.880' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c access-0 (hash n1-0 n2-0))</title>
+   <circle cx='239.880' cy='489.960' r='6.000'/></g>
+  <g><title>(enc n2-0 (pubk as-1))</title>
+   <circle cx='239.880' cy='414.960' r='6.000'/></g>
+  <g><title>(enc as-1 n1-0 n2-0 (pubk c))</title>
+   <circle style='fill: blue;' cx='239.880' cy='339.960' r='6.000'/></g>
+  <g><title>(enc c n1-0 (pubk as-1))</title>
+   <circle cx='239.880' cy='264.960' r='6.000'/></g>
+  <path
+   d='M 139.920 639.960 Q 91.604 712.464 43.287 784.967'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='139.920' cy='639.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='139.920' cy='489.960' r='6.000'/></g>
+  <g><title>(enc management_uri token (hash n1 n2))</title>
+   <circle style='fill: blue;' cx='139.920' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c access (hash n1 n2))</title>
+   <circle cx='139.920' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2 (pubk as-0))</title>
+   <circle cx='139.920' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as-0 n1 n2 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c n1 (pubk as-0))</title>
+   <circle cx='139.920' cy='114.960' r='6.000'/></g>
+  <g><title>(enc response_new (hash n3 n4))</title>
+   <circle cx='39.960' cy='1239.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1164.960' r='6.000'/></g>
+  <g><title>(enc response_error (hash n3 n4))</title>
+   <circle cx='39.960' cy='1089.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1014.960' r='6.000'/></g>
+  <g><title>(enc response (hash n3 n4))</title>
+   <circle cx='39.960' cy='939.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='864.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='789.960' r='6.000'/></g>
+  <path
+   d='M 39.960 564.960 Q 86.940 564.960 133.920 564.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <path
+   d='M 39.960 564.960 Q 137.520 600.660 235.081 711.359'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle cx='39.960' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>((n1 n1-1) (n2 n2-1) (access access-1) (access_token access_token-0) (access_token_new access_token) (access_type access_type) (management_uri management_uri-1) (management_uri_new management_uri_new) (value value) (c c-0) (as as) (rs rs-0))</title>
+   <text
+    x='339.840' y='77.460'
+    style='text-anchor: middle;'>authorization_server</text></g>
+  <g>
+   <title>((token (enc (enc access_token value access_type (privk as)) (pubk rs))) (n1 n1-0) (n2 n2-0) (n3 n3) (n4 n4) (access access-0) (management_uri management_uri-0) (c c) (as as-1) (rs rs))</title>
+   <text
+    x='239.880' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((token token) (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access) (management_uri management_uri) (c c) (as as-0) (rs rs))</title>
+   <text
+    x='139.920' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((n3 n3) (n4 n4) (access_token access_token) (access_token_new access_token) (value value) (access_type access_type) (response response) (response_error response_error) (response_new response_new) (c c) (as as) (rs rs))</title>
+   <text
+    x='39.960' y='77.460'
+    style='text-anchor: middle;'>resource_server</text></g>
+  <text
+   x='189.900' y='39.960'
+   style='text-anchor: middle;'>token_refresh 513 (realized)</text>
+  </svg></div>
+
+<pre>(defskeleton token_refresh
+  (vars (token mesg) (n4 n3 n1 n2 n1-0 n2-0 n1-1 n2-1 text)
+    (access_token value access_type response response_error response_new
+      access management_uri access-0 management_uri-0 access-1
+      access_token-0 management_uri-1 management_uri_new data)
+    (c as rs as-0 as-1 c-0 rs-0 name))
+  (defstrand resource_server 9 (n3 n3) (n4 n4)
+    (access_token access_token) (access_token_new access_token)
+    (value value) (access_type access_type) (response response)
+    (response_error response_error) (response_new response_new) (c c)
+    (as as) (rs rs))
+  (defstrand client 8 (token token) (n1 n1) (n2 n2) (n3 n3) (n4 n4)
+    (access access) (management_uri management_uri) (c c) (as as-0)
+    (rs rs))
+  (defstrand client 9
+    (token
+      (enc (enc access_token value access_type (privk as)) (pubk rs)))
+    (n1 n1-0) (n2 n2-0) (n3 n3) (n4 n4) (access access-0)
+    (management_uri management_uri-0) (c c) (as as-1) (rs rs))
+  (defstrand authorization_server 7 (n1 n1-1) (n2 n2-1)
+    (access access-1) (access_token access_token-0)
+    (access_token_new access_token) (access_type access_type)
+    (management_uri management_uri-1)
+    (management_uri_new management_uri_new) (value value) (c c-0)
+    (as as) (rs rs-0))
+  (precedes ((0 1) (1 6)) ((0 1) (2 6)) ((1 7) (0 2)) ((2 8) (0 3))
+    ((3 6) (2 4)))
+  (neq (c as) (c rs) (as rs))
+  (non-orig (privk c) (privk as) (privk rs))
+  (uniq-orig n4)
+  (operation encryption-test (displaced 4 2 client 9)
+    (enc
+      (enc (enc access_token_new value access_type (privk as))
+        (pubk rs)) (hash n3 n4)) (0 7))
+  (label 513)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs rs) (n4 n4) (access_token access_token)
+        (access_token_new access_token) (value value)
+        (access_type access_type) (response response)
+        (response_error response_error) (response_new response_new)
+        (n3 n3))))
+  (origs (n4 (0 1))))</pre>
+
+<p id="k532">Item <a href="#t0">532</a>, Parent: <a href="#k0">0</a>.</p>
+
+<div>
+ <svg
+  class='diagram' width='379.800pt' height='1129.920pt'
+  xmlns='http://www.w3.org/2000/svg' version='1.1'
+  viewBox='0 0 379.800 1129.920' font-size='12.000'>
+  <defs>
+   <marker
+    id='arrow' orient='auto' markerWidth='5' markerHeight='10' refX='5'
+    refY='5'>
+    <path
+     d='M 0 0 5 5 0 10'
+     style='stroke-width: 2; fill: none; stroke: black;'/></marker>
+   </defs>
+  <line
+   x1='339.840' y1='114.960' x2='339.840' y2='414.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='239.880' y1='114.960' x2='239.880' y2='714.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='139.920' y1='114.960' x2='139.920' y2='639.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <line
+   x1='39.960' y1='489.960' x2='39.960' y2='1089.960'
+   style='stroke-width: 0.960; stroke: gray;'/>
+  <path
+   d='M 339.840 414.960 Q 292.860 414.960 245.880 414.960'
+   style='stroke-dasharray: 6.000,2.400; stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc management_uri-1 (enc (enc access_token value access_type (privk as)) (pubk rs-0)) (hash n1-1 n2-1))</title>
+   <circle cx='339.840' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c-0 access-1 (hash n1-1 n2-1))</title>
+   <circle style='fill: blue;' cx='339.840' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2-1 (pubk as))</title>
+   <circle style='fill: blue;' cx='339.840' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as n1-1 n2-1 (pubk c-0))</title>
+   <circle cx='339.840' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c-0 n1-1 (pubk as))</title>
+   <circle style='fill: blue;' cx='339.840' cy='114.960' r='6.000'/></g>
+  <path
+   d='M 239.880 714.960 Q 142.920 677.460 45.960 714.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle cx='239.880' cy='714.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='239.880' cy='639.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='239.880' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='239.880' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>(enc management_uri-0 (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n1-0 n2-0))</title>
+   <circle style='fill: blue;' cx='239.880' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c access-0 (hash n1-0 n2-0))</title>
+   <circle cx='239.880' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2-0 (pubk as-1))</title>
+   <circle cx='239.880' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as-1 n1-0 n2-0 (pubk c))</title>
+   <circle style='fill: blue;' cx='239.880' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c n1-0 (pubk as-1))</title>
+   <circle cx='239.880' cy='114.960' r='6.000'/></g>
+  <path
+   d='M 139.920 639.960 Q 92.940 639.960 45.960 639.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle cx='139.920' cy='639.960' r='6.000'/></g>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle cx='139.920' cy='489.960' r='6.000'/></g>
+  <g><title>(enc management_uri token (hash n1 n2))</title>
+   <circle style='fill: blue;' cx='139.920' cy='414.960' r='6.000'/></g>
+  <g><title>(enc c access (hash n1 n2))</title>
+   <circle cx='139.920' cy='339.960' r='6.000'/></g>
+  <g><title>(enc n2 (pubk as-0))</title>
+   <circle cx='139.920' cy='264.960' r='6.000'/></g>
+  <g><title>(enc as-0 n1 n2 (pubk c))</title>
+   <circle style='fill: blue;' cx='139.920' cy='189.960' r='6.000'/></g>
+  <g><title>(enc c n1 (pubk as-0))</title>
+   <circle cx='139.920' cy='114.960' r='6.000'/></g>
+  <g><title>(enc response_new (hash n3 n4))</title>
+   <circle cx='39.960' cy='1089.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='1014.960' r='6.000'/></g>
+  <g><title>(enc response_error (hash n3 n4))</title>
+   <circle cx='39.960' cy='939.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='864.960' r='6.000'/></g>
+  <g><title>(enc response (hash n3 n4))</title>
+   <circle cx='39.960' cy='789.960' r='6.000'/></g>
+  <g>
+   <title>(enc (enc (enc access_token value access_type (privk as)) (pubk rs)) (hash n3 n4))</title>
+   <circle style='fill: blue;' cx='39.960' cy='714.960' r='6.000'/></g>
+  <g><title>(enc n4 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='639.960' r='6.000'/></g>
+  <path
+   d='M 39.960 564.960 Q 86.940 564.960 133.920 564.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <path
+   d='M 39.960 564.960 Q 136.920 527.460 233.880 564.960'
+   style='stroke-width: 0.960; stroke: black; marker-end: url(#arrow); fill: none;'/>
+  <g><title>(enc rs n3 n4 (pubk c))</title>
+   <circle cx='39.960' cy='564.960' r='6.000'/></g>
+  <g><title>(enc c n3 (pubk rs))</title>
+   <circle style='fill: blue;' cx='39.960' cy='489.960' r='6.000'/></g>
+  <g>
+   <title>((n1 n1-1) (n2 n2-1) (access access-1) (access_token access_token) (access_type access_type) (management_uri management_uri-1) (value value) (c c-0) (as as) (rs rs-0))</title>
+   <text
+    x='339.840' y='77.460'
+    style='text-anchor: middle;'>authorization_server</text></g>
+  <g>
+   <title>((token (enc (enc access_token value access_type (privk as)) (pubk rs))) (n1 n1-0) (n2 n2-0) (n3 n3) (n4 n4) (access access-0) (management_uri management_uri-0) (c c) (as as-1) (rs rs))</title>
+   <text
+    x='239.880' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((token token) (n1 n1) (n2 n2) (n3 n3) (n4 n4) (access access) (management_uri management_uri) (c c) (as as-0) (rs rs))</title>
+   <text
+    x='139.920' y='77.460' style='text-anchor: middle;'>client</text>
+   </g>
+  <g>
+   <title>((n3 n3) (n4 n4) (access_token access_token) (access_token_new access_token) (value value) (access_type access_type) (response response) (response_error response_error) (response_new response_new) (c c) (as as) (rs rs))</title>
+   <text
+    x='39.960' y='77.460'
+    style='text-anchor: middle;'>resource_server</text></g>
+  <text
+   x='189.900' y='39.960'
+   style='text-anchor: middle;'>token_refresh 532 (realized)</text>
+  </svg></div>
+
+<pre>(defskeleton token_refresh
+  (vars (token mesg) (n4 n3 n1 n2 n1-0 n2-0 n1-1 n2-1 text)
+    (access_token value access_type response response_error response_new
+      access management_uri access-0 management_uri-0 access-1
+      management_uri-1 data) (c as rs as-0 as-1 c-0 rs-0 name))
+  (defstrand resource_server 9 (n3 n3) (n4 n4)
+    (access_token access_token) (access_token_new access_token)
+    (value value) (access_type access_type) (response response)
+    (response_error response_error) (response_new response_new) (c c)
+    (as as) (rs rs))
+  (defstrand client 8 (token token) (n1 n1) (n2 n2) (n3 n3) (n4 n4)
+    (access access) (management_uri management_uri) (c c) (as as-0)
+    (rs rs))
+  (defstrand client 9
+    (token
+      (enc (enc access_token value access_type (privk as)) (pubk rs)))
+    (n1 n1-0) (n2 n2-0) (n3 n3) (n4 n4) (access access-0)
+    (management_uri management_uri-0) (c c) (as as-1) (rs rs))
+  (defstrand authorization_server 5 (n1 n1-1) (n2 n2-1)
+    (access access-1) (access_token access_token)
+    (access_type access_type) (management_uri management_uri-1)
+    (value value) (c c-0) (as as) (rs rs-0))
+  (precedes ((0 1) (1 6)) ((0 1) (2 6)) ((1 7) (0 2)) ((2 8) (0 3))
+    ((3 4) (2 4)))
+  (neq (c as) (c rs) (as rs))
+  (non-orig (privk c) (privk as) (privk rs))
+  (uniq-orig n4)
+  (operation encryption-test (displaced 4 2 client 9)
+    (enc
+      (enc (enc access_token_new value access_type (privk as))
+        (pubk rs)) (hash n3 n4)) (0 7))
+  (label 532)
+  (parent 0)
+  (unrealized)
+  (shape)
+  (maps
+    ((0)
+      ((c c) (as as) (rs rs) (n4 n4) (access_token access_token)
+        (access_token_new access_token) (value value)
+        (access_type access_type) (response response)
+        (response_error response_error) (response_new response_new)
+        (n3 n3))))
+  (origs (n4 (0 1))))</pre>
+
+</body>
+</html>
