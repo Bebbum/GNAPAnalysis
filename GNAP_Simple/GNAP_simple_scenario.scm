@@ -1,5 +1,7 @@
 (herald "Grant Negotiation and Authorization Protocol"
 	(limit 3000)
+	(try-old-strands)
+	(reverse-nodes)
 	(comment "This protocol allows a piece of software, the client instance, to request delegated authorization to resource servers and to request direct information"))
 
 ;*******************************************;
@@ -29,6 +31,8 @@
 			(send (enc token (hash n3 n4)))
 			(recv (enc response (hash n3 n4)))
 		)
+		(uniq-orig n1 n3)
+			(non-orig (privk c) (privk as) (privk rs))
 	)
 	(defrole authorization_server
 		(vars (c as rs name) (access acess_token value access_type data) (n1 n2 text))
@@ -39,6 +43,8 @@
 			(recv (enc c access (hash n1 n2)))
 			(send (enc (enc (enc  (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 		)
+		(uniq-orig n2)
+			(non-orig (privk c) (privk as) (privk rs))
 	)
 	(defrole resource_server
 		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 text))
@@ -49,29 +55,25 @@
 			(recv (enc (enc (enc  (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
 			(send (enc response (hash n3 n4)))
 		)
+		(uniq-orig n4)
+			(non-orig (privk c) (privk as) (privk rs))
 	)
 )
 
-; (defskeleton single_token_simple
-  ; (vars (c as rs name) (n1 n3 text))
-  ; (defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
-  ; (uniq-orig n1 n3)
-  ; (non-orig (privk c) (privk as) (privk rs))
-  ; (neq (c as) (c rs) (as rs)) 
-; )
-
-; (defskeleton single_token_simple
-  ; (vars (c as rs name) (n2 text))
-  ; (defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
-  ; (uniq-orig n2)
-  ; (non-orig (privk c) (privk as) (privk rs))
-  ; (neq (c as) (c rs) (as rs)) 
-; )
+(defskeleton single_token_simple
+	(vars (c as rs name) (n1 n3 text))
+	(defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+	(neq (c as) (c rs) (as rs)) 
+)
 
 (defskeleton single_token_simple
-  (vars (c as rs name) (n4 text))
-  (defstrand resource_server 5 (c c) (as as) (rs rs) (n4 n4))
-  (uniq-orig n4)
-  (non-orig (privk c) (privk as) (privk rs))
-  (neq (c as) (c rs) (as rs)) 
+	(vars (c as rs name) (n2 text))
+	(defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
+	(neq (c as) (c rs) (as rs))
+)
+
+(defskeleton single_token_simple
+	(vars (c as rs name) (n4 text))
+	(defstrand resource_server 5 (c c) (as as) (rs rs) (n4 n4))
+	(neq (c as) (c rs) (as rs)) 
 )
