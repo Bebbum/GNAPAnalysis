@@ -25,6 +25,7 @@
 			(send (enc token_new (hash n3 n4)))
 			(recv (enc response_new (hash n3 n4)))
 		)
+		  (uniq-orig n1 n3)
 	)
 	(defrole authorization_server
 		(vars (c as rs name) (access access_token access_token_new access_type management_uri management_uri_new value data) (n1 n2 text))
@@ -36,8 +37,8 @@
 			(send (enc management_uri (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 			(recv (enc (enc (enc (cat access_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 			(send (enc management_uri_new (enc (enc (cat access_token_new value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
-			
 		)
+		  (uniq-orig n2)
 	)
 	(defrole resource_server
 		(vars (c as rs name) (access_token access_token_new value access_type response response_error response_new data) (n3 n4 text))
@@ -52,13 +53,13 @@
 			(recv (enc (enc (enc (cat access_token_new value access_type) (privk as)) (pubk rs)) (hash n3 n4)))
 			(send (enc response_new (hash n3 n4)))
 		)
+		(uniq-orig n4)
 	)
 )
 
 (defskeleton token_refresh 
   (vars (c as rs name) (n1 n3 text))
   (defstrand client 16 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
-  (uniq-orig n1 n3)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
 )
@@ -66,7 +67,6 @@
 (defskeleton token_refresh 
   (vars (c as rs name) (n2 text))
   (defstrand authorization_server 7 (c c) (as as) (rs rs) (n2 n2))
-  (uniq-orig n2)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
 )
@@ -74,7 +74,6 @@
 (defskeleton token_refresh 
   (vars (c as rs name) (n4 text))
   (defstrand resource_server 9 (c c) (as as) (rs rs) (n4 n4))
-  (uniq-orig n4)
   (non-orig (privk c) (privk as) (privk rs))
   (neq (c as) (c rs) (as rs)) 
 )

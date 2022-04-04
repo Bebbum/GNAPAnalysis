@@ -32,7 +32,6 @@
 			(recv (enc response (hash n3 n4)))
 		)
 		(uniq-orig n1 n3)
-			(non-orig (privk c) (privk as) (privk rs))
 	)
 	(defrole authorization_server
 		(vars (c as rs name) (access acess_token value access_type data) (n1 n2 text))
@@ -44,7 +43,6 @@
 			(send (enc (enc (enc  (cat acess_token value access_type) (privk as)) (pubk rs)) (hash n1 n2)))
 		)
 		(uniq-orig n2)
-			(non-orig (privk c) (privk as) (privk rs))
 	)
 	(defrole resource_server
 		(vars (c as rs name) (acess_token value access_type response data) (n3 n4 text))
@@ -56,24 +54,26 @@
 			(send (enc response (hash n3 n4)))
 		)
 		(uniq-orig n4)
-			(non-orig (privk c) (privk as) (privk rs))
 	)
 )
 
 (defskeleton single_token_simple
 	(vars (c as rs name) (n1 n3 text))
 	(defstrand client 10 (c c) (as as) (rs rs) (n1 n1) (n3 n3))
+	(non-orig (privk c) (privk as) (privk rs))
 	(neq (c as) (c rs) (as rs)) 
 )
 
 (defskeleton single_token_simple
 	(vars (c as rs name) (n2 text))
 	(defstrand authorization_server 5 (c c) (as as) (rs rs) (n2 n2))
+	(non-orig (privk c) (privk as) (privk rs))
 	(neq (c as) (c rs) (as rs))
 )
 
 (defskeleton single_token_simple
 	(vars (c as rs name) (n4 text))
 	(defstrand resource_server 5 (c c) (as as) (rs rs) (n4 n4))
+	(non-orig (privk c) (privk as) (privk rs))
 	(neq (c as) (c rs) (as rs)) 
 )
